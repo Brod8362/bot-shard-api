@@ -1,9 +1,22 @@
+import os
+
+import toml
 from flask import Flask, request
-from structs import ShardStatus, ShardNode, ShardPool
+
 from exceptions import ShardUUIDMismatchError, MissingShardError
+from structs import ShardPool
+
+if os.path.exists("./config.toml"):
+    config = toml.load("./config.toml")
+else:
+    config = {"shard_api": {}}
 
 app = Flask(__name__)
-pool = ShardPool(max_size=2)
+pool = ShardPool(
+    max_size=config["shard_api"].get("max_shards", 3),
+    offline_timeout=config["shard_api"].get("offline_timeout", 30),
+    evict_timeout=config["shard_api"].get("evict_timeout", 60)
+)
 
 
 @app.post("/ping")

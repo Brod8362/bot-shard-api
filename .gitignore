@@ -2,3 +2,4 @@ venv/
 gen/
 .idea/
 *.iml
+config.toml

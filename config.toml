@@ -1,0 +1,4 @@
+[shard_api]
+max_shards = 5
+offline_timeout = 30
+evict_timeout = 60
