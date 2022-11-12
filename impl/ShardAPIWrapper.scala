@@ -20,7 +20,8 @@ class ShardAPIWrapper(version: String, address: String = "http://127.0.0.1:57537
       data = ujson.Obj(
         "uuid" -> this.uuid.toString,
         "version" -> this.version
-      )
+      ),
+      check = false
     )
     response.statusCode match {
       case 200 =>
@@ -32,6 +33,8 @@ class ShardAPIWrapper(version: String, address: String = "http://127.0.0.1:57537
         throw new BadRequestException()
       case 409 =>
         throw new PoolFullException()
+      case _ =>
+        throw new RuntimeException(f"unexpected API response ${response.statusCode}")
     }
   }
 
@@ -42,7 +45,8 @@ class ShardAPIWrapper(version: String, address: String = "http://127.0.0.1:57537
           data = ujson.Obj(
             "shard_id" -> shardId,
             "uuid" -> this.uuid.toString
-          )
+          ),
+          check = false
         )
         response.statusCode match {
           case 200 =>
@@ -54,6 +58,8 @@ class ShardAPIWrapper(version: String, address: String = "http://127.0.0.1:57537
             throw new UUIDMismatchException()
           case 409 =>
             throw new SlotAlreadyEmptyException()
+          case _ =>
+            throw new RuntimeException(f"unexpected API response ${response.statusCode}")
         }
     }
 
@@ -66,7 +72,8 @@ class ShardAPIWrapper(version: String, address: String = "http://127.0.0.1:57537
           data = ujson.Obj(
             "uuid" -> this.uuid.toString,
             "shard_id" -> shardId
-          )
+          ),
+          check = false
         )
         response.statusCode match {
           case 200 =>
@@ -77,6 +84,8 @@ class ShardAPIWrapper(version: String, address: String = "http://127.0.0.1:57537
             throw new UUIDMismatchException()
           case 409 =>
             throw new UUIDMismatchException()
+          case _ =>
+            throw new RuntimeException(f"unexpected API response ${response.statusCode}")
         }
       case None =>
         throw new IncorrectStateException
