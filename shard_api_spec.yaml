@@ -1,0 +1,88 @@
+openapi: 3.0.3
+info:
+  title: Discord Shard API
+  description: API meant for automatically managing groups of shards
+  version: 1.0.0
+servers:
+  - url: 'http://127.0.0.1:57537'
+components:
+  schemas:
+    PoolStatus:
+      type: string
+      enum: [healthy, degraded, offline, unknown]
+    ShardPool:
+      type: object
+      description: Schema describing the shard pool
+      properties:
+        max_size:
+          type: integer
+          description: Maximum number of shards allowed
+        allocated:
+          type: integer
+          description: Current number of shards allocated and healthy
+        shards:
+          type: array
+          items:
+            $ref: "#/components/schemas/ShardStatus"
+    ShardStatus:
+      type: string
+      enum: [online, offline, unknown]
+    ShardNode:
+      type: object
+      properties:
+        uuid:
+          type: string
+          description: UUID of the shard
+        origin:
+          type: string
+          description: IP address the shard connected from
+          required: true
+        status:
+          $ref: '#/definitions/ShardStatus'
+        shard_id:
+          type: integer
+          description: ID of the shard
+        last_seen:
+          type: integer
+          description: unix timestamp of when the shard was last known to be online
+        version:
+          type: string
+          description: version of the bot the shard is running (e.g a git commit hash)
+paths:
+  /ping:
+    post:
+      responses:
+        200:
+          description: Success
+        409:
+          description: Server has updated in such a way that the shard should shut down and re-register
+        412:
+          description: Shard ID and/or UUID missing from the request body
+      description: Ping the API to alert the shard of your status.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                shard_id:
+                  type: integer
+                  description: ID of the shard pinging the API
+                uuid:
+                  type: string
+                  description: UUID of the shard pinging the API
+
+  /status:
+    get:
+      description: Get the current status of the shard pool
+      responses:
+        200:
+          description: Status contained within
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PoolStatus"
+            text/html:
+              schema:
+                type: object
+                description: HTML page of pool status
