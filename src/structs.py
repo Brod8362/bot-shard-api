@@ -1,12 +1,12 @@
 import time
 from enum import Enum
 from dataclasses import dataclass
-
+import exceptions
 
 class ShardStatus(Enum):
-    ONLINE = 1
-    OFFLINE = 2
-    UNKNOWN = 3
+    ONLINE = "online"
+    OFFLINE = "offline"
+    UNKNOWN = "unknown"
 
 
 @dataclass
@@ -17,15 +17,27 @@ class ShardNode:
     last_seen: float = -1
     version: str = None
 
+    def as_dict(self, pool) -> dict[str, any]:
+        return {
+            "uuid": self.uuid,
+            "origin": self.origin,
+            "shard_id": self.shard_id,
+            "last_seen": self.last_seen,
+            "version": self.version,
+            "status": pool.node_status(self.shard_id)
+        }
+
 
 class ShardPool:
     max_size: int
     shards: list[ShardNode]
     offline_timeout: int
+    evict_timeout: int
 
-    def __init__(self, max_size: int, offline_timeout: int = 30):
+    def __init__(self, max_size: int, offline_timeout: int = 30, evict_timeout: int = 60):
         self.max_size = max_size
         self.offline_timeout = offline_timeout
+        self.evict_timeout = evict_timeout
         self.shards = [None for _ in range(max_size)]
 
     def request(self) -> int:
@@ -73,14 +85,12 @@ class ShardPool:
         """
         shard: ShardNode = self.shards[shard_id]
         if shard is None:
-            # TODO raise exception
-            return
+            raise exceptions.MissingShardError()
         if shard.uuid != uuid:
-            # TODO raise exception
-            return
+            raise exceptions.ShardUUIDMismatchError()
         shard.last_seen = time.time()
 
-    def status(self, shard_id: int, uuid: str = None) -> ShardStatus:
+    def node_status(self, shard_id: int, uuid: str = None) -> ShardStatus:
         """
         Get the status of the given shard ID.
         :param shard_id: Shard ID to check status of
@@ -92,9 +102,12 @@ class ShardPool:
             return ShardStatus.UNKNOWN
 
         if uuid is not None and shard.uuid != uuid:
-            raise RuntimeError("shard UUID is not what was expected")
+            raise exceptions.ShardUUIDMismatchError()
 
         if shard.last_seen < 0:
             return ShardStatus.UNKNOWN
 
         return ShardStatus.ONLINE if time.time() - shard.last_seen < self.offline_timeout else ShardStatus.OFFLINE
+
+    def nodes_as_dict(self):
+        return list(map(lambda node: None if node is None else node.as_dict(self), self.shards))

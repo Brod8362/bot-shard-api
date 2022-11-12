@@ -76,7 +76,7 @@ paths:
         400:
           description: Shard ID and/or UUID missing from the request body
         403:
-          description: Invalid shard UUID
+          description: Invalid shard ID
         409:
           description: Server has updated in such a way that the shard should shut down and re-register
       description: Ping the API to alert the shard of your status.
@@ -118,7 +118,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/JoinRequestResponse"
         400:
-          description: UUID or verison not specified
+          description: UUID or version not specified
         409:
           description: The pool is full, no slots are available
       requestBody:
