@@ -102,7 +102,15 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PoolStatus"
+                properties:
+                  nodes:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ShardNode"
+                  summary:
+                    $ref: "#/components/schemas/PoolStatus"
+                  size:
+                    type: integer
             text/html:
               schema:
                 type: object
@@ -122,8 +130,33 @@ paths:
         409:
           description: The pool is full, no slots are available
       requestBody:
-        description: asd
+        description: UUID and version of shard requesting to join pool
         content:
           application/json:
             schema:
               $ref: "#/components/schemas/JoinRequest"
+
+  /leave:
+    post:
+      responses:
+        200:
+          description: Success, shard left pool successfully
+        400:
+          description: UUID or shard ID not specified
+        403:
+          description: UUID mismatch
+        409:
+          description: Slot already empty
+      requestBody:
+        description: ID and UUID of shard requesting to leave pool
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                shard_id:
+                  type: integer
+                  description: ID of the shard pinging the API
+                uuid:
+                  type: string
+                  description: UUID of the shard pinging the API
