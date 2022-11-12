@@ -31,7 +31,13 @@ def shard_ping():
 def get_status():
     pool.cull()
     if "application/json" in request.accept_mimetypes:
-        return pool.nodes_as_dict(), 200
+        nodes = pool.nodes_as_dict()
+        resp_dict = {
+            "nodes": nodes,
+            "summary": pool.summary().value,
+            "size": pool.max_size
+        }
+        return resp_dict, 200
     else:
         # TODO return http version
         return "<p>ok</p>", 200
@@ -69,4 +75,5 @@ def leave_pool():
     if shard.uuid != json["uuid"]:
         return "uuid mismatch", 403
     pool.free(json["shard_id"])
+    pool.cull()
     return "", 200

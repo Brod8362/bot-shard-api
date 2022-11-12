@@ -10,6 +10,13 @@ class ShardStatus(Enum):
     UNKNOWN = "unknown"
 
 
+class PoolStatus(Enum):
+    HEALTHY = "healthy"
+    DEGRADED = "degraded"
+    OFFLINE = "offline"
+    UNKNOWN = "unknown"
+
+
 @dataclass
 class ShardNode:
     uuid: str
@@ -40,7 +47,6 @@ class ShardPool:
         self.offline_timeout = offline_timeout
         self.evict_timeout = evict_timeout
         self.shards = [None for _ in range(max_size)]
-
 
     def request(self) -> int:
         """
@@ -122,3 +128,17 @@ class ShardPool:
             if shard is not None and current_time - shard.last_seen > self.evict_timeout:
                 # cull shards that are considered dead
                 self.shards[index] = None
+
+    def summary(self):
+        num_unavailable = 0
+        for index, shard in enumerate(self.shards):
+            if shard is None or self.node_status(shard_id=index) != ShardStatus.ONLINE:
+                num_unavailable += 1
+        if num_unavailable == 0:
+            return PoolStatus.HEALTHY
+        elif 0 < num_unavailable < self.max_size:
+            return PoolStatus.DEGRADED
+        elif num_unavailable == self.max_size:
+            return PoolStatus.OFFLINE
+        else:
+            return PoolStatus.UNKNOWN
