@@ -20,7 +20,7 @@ components:
         allocated:
           type: integer
           description: Current number of shards allocated and healthy
-        shards:
+        nodes:
           type: array
           items:
             $ref: "#/components/schemas/ShardStatus"
@@ -48,6 +48,25 @@ components:
         version:
           type: string
           description: version of the bot the shard is running (e.g a git commit hash)
+    JoinRequest:
+      type: object
+      properties:
+        uuid:
+          type: string
+          description: UUID of the shard
+        version:
+          type: string
+          description: version of the bot the shard is running (e.g a git commit hash)
+    JoinRequestResponse:
+      type: object
+      properties:
+        shard_id:
+          type: integer
+          description: ID of the shard
+        max_shards:
+          type: integer
+          description: Maximum number of shards
+
 paths:
   /ping:
     post:
@@ -86,3 +105,21 @@ paths:
               schema:
                 type: object
                 description: HTML page of pool status
+
+  /join:
+    post:
+      responses:
+        200:
+          description: Success, shard may join the pool
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JoinRequestResponse"
+        409:
+          description: The pool is full, no slots are available
+      requestBody:
+        description: asd
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JoinRequest"
