@@ -3,6 +3,7 @@ from enum import Enum
 from dataclasses import dataclass
 import exceptions
 
+
 class ShardStatus(Enum):
     ONLINE = "online"
     OFFLINE = "offline"
@@ -39,6 +40,7 @@ class ShardPool:
         self.offline_timeout = offline_timeout
         self.evict_timeout = evict_timeout
         self.shards = [None for _ in range(max_size)]
+
 
     def request(self) -> int:
         """
@@ -113,3 +115,10 @@ class ShardPool:
 
     def nodes_as_dict(self):
         return list(map(lambda node: None if node is None else node.as_dict(self), self.shards))
+
+    def cull(self):
+        current_time = time.time()
+        for index, shard in enumerate(self.shards):
+            if shard is not None and current_time - shard.last_seen > self.evict_timeout:
+                # cull shards that are considered dead
+                self.shards[index] = None
