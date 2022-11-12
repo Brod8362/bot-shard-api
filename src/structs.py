@@ -24,7 +24,7 @@ class ShardNode:
             "shard_id": self.shard_id,
             "last_seen": self.last_seen,
             "version": self.version,
-            "status": pool.node_status(self.shard_id)
+            "status": pool.node_status(self.shard_id).value
         }
 
 
@@ -45,9 +45,11 @@ class ShardPool:
         Request a free shard ID.
         :return: -1 if no shard slots are available, otherwise, the shard slot.
         """
+        # TODO: have a uuid check?
         for index, shard in enumerate(self.shards):
-            if shard is None or self.status(index) != ShardStatus.ONLINE:
+            if shard is None:
                 return index
+        return -1
 
     def allocate(self, shard_id: int, uuid: str, origin: str, version: str) -> None:
         """

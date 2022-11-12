@@ -8,7 +8,7 @@ pool = ShardPool(2)
 
 @app.post("/ping")
 def shard_ping():
-    json = request.json()
+    json = request.json
     if "shard_id" not in json:
         return "shard ID not specified", 400
     if "uuid" not in json:
@@ -16,10 +16,12 @@ def shard_ping():
 
     try:
         pool.update_seen(json["shard_id"], json["uuid"])
+    except IndexError:
+        return "shard ID out of bounds", 403
     except MissingShardError:
-        return "", 403
+        return "no shard allocated for given ID", 403
     except ShardUUIDMismatchError:
-        return "", 409
+        return "UUID does not match allocated", 409
     return "", 200
 
 
@@ -34,7 +36,7 @@ def get_status():
 
 @app.post("/join")
 def join_pool():
-    json = request.json()
+    json = request.json
     if "uuid" not in json:
         return "UUID not specified", 400
     if "version" not in json:
