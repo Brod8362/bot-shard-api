@@ -38,7 +38,7 @@ components:
           description: IP address the shard connected from
           required: true
         status:
-          $ref: '#/definitions/ShardStatus'
+          $ref: '#/components/schemas/ShardStatus'
         shard_id:
           type: integer
           description: ID of the shard
