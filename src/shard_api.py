@@ -3,7 +3,7 @@ from structs import ShardStatus, ShardNode, ShardPool
 from exceptions import ShardUUIDMismatchError, MissingShardError
 
 app = Flask(__name__)
-pool = ShardPool(2)
+pool = ShardPool(max_size=2)
 
 
 @app.post("/ping")
@@ -22,11 +22,15 @@ def shard_ping():
         return "no shard allocated for given ID", 403
     except ShardUUIDMismatchError:
         return "UUID does not match allocated", 409
+    finally:
+        pool.cull()
     return "", 200
+
 
 
 @app.get("/status")
 def get_status():
+    pool.cull()
     if "application/json" in request.accept_mimetypes:
         return pool.nodes_as_dict(), 200
     else:
@@ -36,6 +40,7 @@ def get_status():
 
 @app.post("/join")
 def join_pool():
+    pool.cull()
     json = request.json
     if "uuid" not in json:
         return "UUID not specified", 400
